@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>رفع ZIP PDF</title>
+<style>
+body { font-family: Arial; background: #f5f5f5; margin:0; padding:0; }
+.container { max-width: 600px; margin: 50px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 20px; }
+h2 { text-align: center; color: #007bff; }
+input[type=file] { width: 100%; margin: 10px 0; padding: 10px; }
+button { width: 100%; padding: 12px; border:none; border-radius:8px; background:#007bff; color:white; font-size:16px; cursor:pointer; }
+button:hover { background:#0056b3; }
+#progressContainer { display:none; margin-top:10px; }
+#progressBar { width:0%; height:20px; background:#007bff; border-radius:8px; }
+#progressWrapper { background:#e0e0e0; border-radius:8px; overflow:hidden; }
+#message { margin-top:10px; padding:10px; background:#eee; border-radius:8px; min-height:20px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>رفع ZIP PDF</h2>
+    <input type="file" id="zipFile" accept=".zip">
+    <button onclick="uploadZip()">رفع الملف</button>
+
+    <div id="progressContainer">
+        <div id="progressWrapper">
+            <div id="progressBar"></div>
+        </div>
+        <span id="progressText">0%</span>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script>
+async function uploadZip() {
+    const fileInput = document.getElementById("zipFile");
+    const file = fileInput.files[0];
+    const messageDiv = document.getElementById("message");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    if(!file) {
+        messageDiv.textContent = "الرجاء اختيار ملف ZIP.";
+        return;
+    }
+
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    progressText.textContent = "0%";
+    messageDiv.textContent = "";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/upload_zip");
+
+        xhr.upload.onprogress = function(e) {
+            if(e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + "%";
+                progressText.textContent = percent + "%";
+            }
+        }
+
+        xhr.onload = function() {
+            if(xhr.status === 200) {
+                progressBar.style.width = "100%";
+                progressText.textContent = "100%";
+                const res = JSON.parse(xhr.responseText);
+                messageDiv.textContent = res.message;
+            } else {
+                messageDiv.textContent = "حدث خطأ أثناء الرفع!";
+            }
+        }
+
+        xhr.onerror = function() {
+            messageDiv.textContent = "حدث خطأ أثناء الاتصال بالخادم.";
+        }
+
+        xhr.send(formData);
+
+    } catch (err) {
+        messageDiv.textContent = "حدث خطأ: " + err;
+    }
+}
+</script>
+</body>
+</html>
