@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>PDF Chatbot</title>
+<style>
+body { font-family: Arial; background: #f5f5f5; margin:0; padding:0; }
+.container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display:flex; flex-direction: column; height:80vh; }
+header { text-align:center; padding:15px; background:#007bff; color:white; border-radius: 10px 10px 0 0; font-size:20px; }
+#chat { flex:1; padding: 20px; overflow-y:auto; display:flex; flex-direction: column; }
+.bubble { padding: 10px 15px; border-radius: 20px; margin: 5px; max-width: 70%; }
+.user { background:#DCF8C6; align-self:flex-end; text-align:right; }
+.bot { background:#E6E6E6; align-self:flex-start; text-align:left; }
+footer { display:flex; padding:10px; border-top:1px solid #ddd; }
+input[type=text] { flex:1; padding:10px; border-radius:20px; border:1px solid #ccc; font-size:16px; }
+button { margin-left:10px; padding:10px 20px; border:none; border-radius:20px; background:#007bff; color:white; cursor:pointer; }
+button:hover { background:#0056b3; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>PDF Chatbot</header>
+<div id="chat"></div>
+<footer>
+<input type="text" id="question" placeholder="اكتب سؤالك هنا" onkeypress="if(event.key==='Enter'){askQuestion();}">
+<button onclick="askQuestion()">إرسال</button>
+</footer>
+</div>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/ask";
+
+function addMessage(text, sender) {
+    const chat = document.getElementById("chat");
+    const bubble = document.createElement("div");
+    bubble.className = "bubble " + sender;
+    bubble.innerText = text;
+    chat.appendChild(bubble);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function askQuestion() {
+    const questionInput = document.getElementById("question");
+    const question = questionInput.value;
+    if(!question.trim()) return;
+    addMessage(question, "user");
+    questionInput.value = "";
+
+    try {
+        const formData = new FormData();
+        formData.append("question", question);
+        const res = await fetch(API_URL, { method:"POST", body:formData });
+        const data = await res.json();
+        addMessage(data.answer, "bot");
+    } catch (e) {
+        addMessage("⚠ لا يمكن الاتصال بالـ API", "bot");
+    }
+}
+</script>
+</body>
+</html>

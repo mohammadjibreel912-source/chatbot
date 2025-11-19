@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سحب البيانات من رابط</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .container {
+        background: #fff;
+        padding: 30px 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+    }
+    h2 {
+        margin-bottom: 25px;
+        color: #333;
+    }
+    input[type="text"] {
+        width: 100%;
+        padding: 14px 12px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        margin-bottom: 20px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    input[type="text"]:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 8px rgba(0,123,255,0.3);
+    }
+    button {
+        width: 100%;
+        padding: 14px 0;
+        border: none;
+        border-radius: 10px;
+        background-color: #007bff;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    button:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .message {
+        margin-top: 20px;
+        padding: 12px;
+        border-radius: 10px;
+        background-color: #f1f1f1;
+        color: #333;
+        font-size: 14px;
+        min-height: 40px;
+        transition: all 0.3s;
+    }
+    #progressContainer {
+        display: none;
+        margin-top: 20px;
+        text-align: left;
+    }
+    #progressWrapper {
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        height: 22px;
+    }
+    #progressBar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #4facfe, #00f2fe);
+        transition: width 0.3s;
+    }
+    #progressText {
+        display: block;
+        margin-top: 5px;
+        text-align: right;
+        font-size: 14px;
+        color: #555;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>سحب البيانات من رابط موقع</h2>
+    <input type="text" id="urlInput" placeholder="أدخل رابط الموقع هنا">
+    <button onclick="scrapeURL()">سحب البيانات</button>
+
+    <div id="progressContainer">
+        <div id="progressWrapper">
+            <div id="progressBar"></div>
+        </div>
+        <span id="progressText">0%</span>
+    </div>
+
+    <div id="message" class="message"></div>
+</div>
+
+<script>
+async function scrapeURL() {
+    const url = document.getElementById('urlInput').value;
+    const messageDiv = document.getElementById('message');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    if (!url) {
+        messageDiv.textContent = "الرجاء إدخال رابط الموقع.";
+        return;
+    }
+
+    progressContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    progressText.textContent = "0%";
+    messageDiv.textContent = "";
+
+    try {
+        const formData = new FormData();
+        formData.append("url", url);
+
+        // Progress وهمي
+        let progress = 0;
+        const interval = setInterval(() => {
+            if (progress < 90) {
+                progress += 10;
+                progressBar.style.width = progress + "%";
+                progressText.textContent = progress + "%";
+            }
+        }, 200);
+
+        const response = await fetch("/scrape_url", {
+            method: "POST",
+            body: formData
+        });
+        clearInterval(interval);
+
+        const data = await response.json();
+        progressBar.style.width = "100%";
+        progressText.textContent = "100%";
+        messageDiv.textContent = data.message;
+
+    } catch (err) {
+        messageDiv.textContent = "حدث خطأ أثناء إرسال الطلب.";
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>
